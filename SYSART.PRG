@@ -1,0 +1,219 @@
+PUSH KEY CLEAR
+SELECT SYSART
+DEFI WIND BRART FROM LIBRART,CIBRART TO LIBRART+12,CIBRART+62 ;
+                TITLE "<ARTICULOS>";
+                FOOTER " F1=Inc,F2=Mod,F3=Eli,F4=Bus,F5=Ord.Cod,F6=Ord.Lin,F7=Ord.Des,ESC=Sel ";
+                DOUBLE NOFLOAT NOZOOM NOGROW SHADOW COLOR SCHEME 10
+ACTI WIND BRART
+ON KEY LABEL F1 DO BRINC
+ON KEY LABEL F2 DO BRMOD
+ON KEY LABEL F3 DO BRELI
+ON KEY LABEL F4 DO BRBUS
+ON KEY LABEL F5 DO ORDCOD
+ON KEY LABEL F6 DO ORDLIN
+ON KEY LABEL F7 DO ORDDES
+BROWSE FIELDS CODIGO:H="CODIGO", DESCRI:H="DESCRIPCION",UNIMED:H="UNIDAD",PRECIO:H="PRECIO";
+              NOAPPEND NODELETE NOMENU NOOPTIMIZE REST SAVE IN WINDOW BRART
+RELEASE WIND BRART
+POP KEY
+*ON KEY LABEL F1
+*ON KEY LABEL F2
+*ON KEY LABEL F3
+*ON KEY LABEL F4
+*ON KEY LABEL F5
+*ON KEY LABEL F6
+*ON KEY LABEL F7
+RETURN
+***********************
+***                 ***
+***RUTINAS DE BRART ***
+***                 ***
+***********************
+PROCEDURE BRINC
+DEFI WIND WINCCAM FROM liBRART+5,ciBRART+10 TO liBRART+16,ciBRART+60;
+                  TITLE "<INCLUIR>" DOUBLE NOFLOAT NOZOOM NOGROW SHADOW COLOR SCHEME 10
+ACTI WIND WINCCAM
+DO WHILE .T.
+   SCAT MEMV BLANK
+   @ 00,00 CLEAR
+   @ 00,01 SAY "CODIGO      :"
+   @ 01,01 SAY "DESCRIPCION :"
+   @ 02,01 SAY "LINEA       :"
+   @ 03,01 SAY "UNIDAD      :"
+   @ 04,01 SAY "PRECIO      :"
+   @ 05,01 SAY "MARCA       :"
+   @ 06,01 SAY "MODELO      :"
+   @ 07,01 SAY "IMPUESTO 1  :"
+   @ 08,01 SAY "IMPUESTO 2  :"
+   @ 00,15 GET M.CODIGO
+   READ
+   IF LASTKEY()=27
+      EXIT
+   ENDIF
+   IF LEN(ALLTRIM(M.CODIGO))=0
+      LOOP
+   ENDIF
+   SET ORDER TO SYSART1
+   SEEK M.CODIGO
+   IF FOUND()
+      @ 01,15 SAY DESCRI
+      STORE "YA EXISTE, VERIFIQUE" TO WTEXT
+      DO AVISO WITH WTEXT
+      LOOP
+   ELSE
+      @ 01,15 GET M.DESCRI
+      @ 02,15 GET M.LINEA
+      @ 03,15 GET M.UNIMED
+      @ 04,15 GET M.PRECIO
+      @ 05,15 GET M.MARCA
+      @ 06,15 GET M.MODELO
+      @ 07,15 GET M.IMPUESTO1
+      @ 08,15 GET M.IMPUESTO2
+      READ
+      *** INICIO RUTINA DE ACEPTAR-CANCELAR
+      store 1 to wop
+      do while .t.
+         @ 09,12  get wop pict "@*H Aceptar;Cancelar" defa wop
+         read
+         if lastkey()=13
+            exit
+         endif
+      enddo
+      *** FIN  RUTINA ACEPTAR-CANCELAR
+      if wop=1
+         if filloc()
+            append blank
+            gath memvar
+            unlock all
+         else
+            store "OPERACION CANCELADA, REINTENTE" to wtext
+            do aviso with wtext
+         endif
+      endif
+   ENDIF
+ENDDO
+RELEASE WIND WINCCAM
+RETURN
+***
+PROCEDURE BRMOD
+DEFI WIND WMODLIN FROM liBRART+5,ciBRART+10 TO liBRART+16,ciBRART+60;
+                  TITLE "<MODIFICAR>" DOUBLE NOFLOAT NOZOOM NOGROW SHADOW COLOR SCHEME 10
+ACTI WIND WMODLIN
+SCAT MEMVAR
+@ 00,01 SAY "CODIGO      :"
+@ 01,01 SAY "DESCRIPCION :"
+@ 02,01 SAY "LINEA       :"
+@ 03,01 SAY "UNIDAD      :"
+@ 04,01 SAY "PRECIO      :"
+@ 05,01 SAY "MARCA       :"
+@ 06,01 SAY "MODELO      :"
+@ 07,01 SAY "IMPUESTO 1  :"
+@ 08,01 SAY "IMPUESTO 2  :"
+@ 00,15 SAY M.CODIGO
+@ 01,15 GET M.DESCRI
+@ 02,15 GET M.LINEA
+@ 03,15 GET M.UNIMED
+@ 04,15 GET M.PRECIO
+@ 05,15 GET M.MARCA
+@ 06,15 GET M.MODELO
+@ 07,15 GET M.IMPUESTO1
+@ 08,15 GET M.IMPUESTO2
+READ
+*** INICIO RUTINA DE ACEPTAR-CANCELAR
+store 1 to wop
+do while .t.
+   @ 09,12  get wop pict "@*H Aceptar;Cancelar" defa wop
+   read
+   if lastkey()=13
+      exit
+   endif
+enddo
+*** FIN  RUTINA ACEPTAR-CANCELAR
+if wop=1
+   if recloc()
+      gath memvar
+      unlock all
+   else
+      store "OPERACION CANCELADA, REINTENTE" to wtext
+      do aviso with wtext
+   endif
+endif
+RELEASE WIND WMODLIN
+RETURN
+***
+PROCEDURE BRELI
+DEFI WIND WELILIN FROM liBRART+5,ciBRART+10 TO liBRART+16,ciBRART+60;
+                  TITLE "<ELIMINAR>" DOUBLE NOFLOAT NOZOOM NOGROW SHADOW COLOR SCHEME 10
+ACTI WIND WELILIN
+SCAT MEMVAR
+@ 00,01 SAY "CODIGO      :"
+@ 01,01 SAY "DESCRIPCION :"
+@ 00,15 SAY M.CODIGO
+@ 01,15 SAY M.DESCRI
+*** INICIO RUTINA DE ACEPTAR-CANCELAR
+store 2 to wop
+do while .t.
+   @ 03,12  get wop pict "@*H Cancelar;Aceptar" defa wop
+   read
+   if lastkey()=13
+      exit
+   endif
+enddo
+*** FIN  RUTINA ACEPTAR-CANCELAR
+if wop=2
+   if recloc()
+      delete
+      unlock all
+   else
+      store "OPERACION CANCELADA, REINTENTE" to wtext
+      do aviso with wtext
+   endif
+endif
+RELEASE WIND WELILIN
+RETURN
+***
+PROCEDURE BRBUS
+DEFI WIND WBUSLIN FROM liBRART+5,ciBRART+10 TO liBRART+7,ciBRART+60;
+                  TITLE "<BUSCAR>" DOUBLE NOFLOAT NOZOOM NOGROW SHADOW COLOR SCHEME 10
+ACTI WIND WBUSLIN
+DO WHILE .T.
+   SCAT MEMV BLANK
+   @ 00,01 SAY "CLAVE       :"
+   @ 00,15 GET M.CODIGO
+   READ
+   IF LASTKEY()=27
+      EXIT
+   ENDIF
+   IF LEN(ALLTRIM(M.CODIGO))=0
+      LOOP
+   ENDIF
+   STORE ALLTRIM(M.CODIGO) TO WCLAVE
+   SEEK WCLAVE
+   IF FOUND()
+      EXIT
+   ELSE
+      STORE "NO REGISTRADO, VERIFIQUE" TO WTEXT
+      DO AVISO WITH WTEXT
+   ENDIF
+ENDDO
+RELEASE WIND WBUSLIN
+RETURN
+************
+PROC ORDCOD
+************
+SET ORDER TO SYSART1
+GO TOP
+RETURN
+************
+PROC ORDLIN
+************
+SET ORDER TO SYSART2
+GO TOP
+RETURN
+************
+PROC ORDDES
+************
+SET ORDER TO SYSART3
+GO TOP
+RETURN
+

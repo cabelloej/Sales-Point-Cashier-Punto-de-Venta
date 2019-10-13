@@ -1,0 +1,8 @@
+DO WHILE .T.
+   VAL=INKEY(1)
+   @  0,0 CLEAR
+   @ 12,20 SAY VAL
+   IF VAL = 27
+      EXIT
+   ENDIF
+ENDDO
